@@ -5,6 +5,8 @@ import { configured, supabase, rpc, demoState, demoHistory } from './api';
 import { countdown, easternDay, formatDay, nextMidnight, rankPlayers, scoreValue } from './rules';
 import './style.css';
 import AdminPanel from './AdminPanel';
+import RarityUpload from './RarityUpload';
+import { TIERS } from './rarity';
 
 const number = n => new Intl.NumberFormat('en-US').format(n);
 const initials = name => name.split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
@@ -46,6 +48,7 @@ function App() {
   const [editing, setEditing] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [rules, setRules] = useState(false);
+  const [rarityBoard, setRarityBoard] = useState([]);
   const offset = useRef(0);
   const generation = useRef(0);
   const rollover = useRef(false);
@@ -122,6 +125,17 @@ function App() {
   }
   useEffect(() => { if (tab === 'history' && signedIn && !demo && !historyLoaded) loadHistory(); }, [tab, signedIn, demo, historyLoaded]);
 
+  useEffect(() => {
+    if (!signedIn || tab !== 'rarity') return;
+    if (demo) { setRarityBoard([]); return; }
+    rpc('rarity_board').then(setRarityBoard).catch(e => setError(e.message));
+  }, [tab, session?.user?.id, demo]);
+  async function saveRarity(rounds) {
+    if (demo) { setRarityBoard([]); return; }
+    await rpc('save_rarity', { p_expected_day: today, p_rounds: rounds });
+    setRarityBoard(await rpc('rarity_board'));
+  }
+
   async function signIn() {
     setError('');
     if (!configured) { setNotice('Google sign-in will be available once the site’s accounts are connected. You can explore the preview now.'); return; }
@@ -153,11 +167,11 @@ function App() {
   return <>
     {demo && <div className="preview-banner"><span><strong>INTERACTIVE PREVIEW</strong> Sample players & scores · changes stay in this tab</span><button onClick={signOut}>Exit preview <X size={13}/></button></div>}
     <header className="header"><a href="/" className="brand" aria-label="Krillion Club home"><span className="brand-symbol"><Waves size={25}/></span><span>krillion<span className="brand-club">club</span></span></a>
-      <nav aria-label="Main navigation">{[['today', 'Today'], ['rankings', 'All-time'], ['history', 'History'], ...(state?.isAdmin ? [['admin', 'Admin']] : [])].map(([value, label]) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}</nav>
+      <nav aria-label="Main navigation">{[['today', 'Today'], ['rankings', 'All-time'], ['rarity', 'Rarity'], ['history', 'History'], ...(state?.isAdmin ? [['admin', 'Admin']] : [])].map(([value, label]) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}</nav>
       <div className="account">{signedIn ? <><span className="account-name">{me?.name || 'Your account'}</span>{me && <Avatar name={me.name} small/>}<button className="icon-button" title={demo ? 'Exit preview' : 'Sign out on this device'} aria-label={demo ? 'Exit preview' : 'Sign out on this device'} onClick={signOut}><LogOut size={18}/></button></> : <button className="button button-small button-outline" onClick={signIn} disabled={busy || !authReady}>Sign in <ArrowRight size={15}/></button>}</div>
     </header>
     <main>
-      <section className="hero"><div><div className="eyebrow"><span className="live-dot"/> THE DAILY RITUAL, TOGETHER</div><h1>{tab === 'history' ? <>Good games.<br/><em>Great memories.</em></> : tab === 'rankings' ? <>A little glory.<br/><em>A lot of bragging rights.</em></> : <>Same game.<br/><em>Friendly rivalry.</em></>}</h1><p>{tab === 'history' ? 'Every score has a story. Here’s your group’s so far.' : tab === 'rankings' ? 'The daily wins. The long game. Two ways to make your mark.' : 'Log your Krillion score. See where you stand. Do it all again tomorrow.'}</p></div>
+      <section className="hero"><div><div className="eyebrow"><span className="live-dot"/> THE DAILY RITUAL, TOGETHER</div><h1>{tab === 'history' ? <>Good games.<br/><em>Great memories.</em></> : tab === 'rarity' ? <>Find the rarest.<br/><em>Earn the glory.</em></> : tab === 'rankings' ? <>A little glory.<br/><em>A lot of bragging rights.</em></> : <>Same game.<br/><em>Friendly rivalry.</em></>}</h1><p>{tab === 'history' ? 'Every score has a story. Here’s your group’s so far.' : tab === 'rankings' ? 'The daily wins. The long game. Two ways to make your mark.' : 'Log your Krillion score. See where you stand. Do it all again tomorrow.'}</p></div>
         <div className="reset-card"><span className="reset-caption"><Clock3 size={15}/> NEXT FRESH START</span><strong className="countdown">{countdown(resetAt, now)}</strong><span className="reset-bottom">Midnight, US Eastern <span>↻</span></span></div>
       </section>
 
@@ -176,7 +190,16 @@ function App() {
           {me.today !== null && !editing ? <div className="saved-score"><span className="saved-pill"><Check size={13}/> YOU’RE ON THE BOARD</span><h2>{number(me.today)}<span>points today</span></h2><p>Nice. Let the friendly competition begin.</p><button className="button button-mint" onClick={() => { setEditing(true); setScore(String(me.today)); }} disabled={expired}><Pencil size={16}/> Correct my score</button></div>
           : <form onSubmit={saveScore}><h2>{editing ? 'Make it right.' : 'How did you do?'}</h2><p>{editing ? 'Your corrected score replaces today’s entry.' : 'Big score or humble day. It all adds up.'}</p><label htmlFor="daily-score">{editing ? 'Corrected score' : 'Your score'}</label><div className="score-input"><input id="daily-score" type="text" inputMode="numeric" pattern="[0-9]+" autoComplete="off" required value={score} onChange={e => setScore(e.target.value)} placeholder="000" aria-describedby="score-help"/><span>pts</span></div><button className="button button-mint" disabled={busy || expired}>{busy ? 'Saving…' : editing ? 'Save correction' : 'Submit my score'}<ArrowRight size={17}/></button>{editing && <button type="button" className="cancel-button" onClick={() => setEditing(false)}>Cancel</button>}</form>}
           <div className="score-note" id="score-help"><Clock3 size={14}/><span>Yours to edit until midnight Eastern.</span></div>
-        </section><Board players={state.players} metric="today" currentId={currentId} title="Today’s leaderboard" description="The score to beat is right here." icon={Trophy}/></div></>}
+        </section><Board players={state.players} metric="today" currentId={currentId} title="Today’s leaderboard" description="The score to beat is right here." icon={Trophy}/></div>{me.today !== null && <RarityUpload day={today} expectedScore={me.today} onSave={saveRarity} disabled={expired} demo={demo}/>}</>}
+        {tab === 'rarity' && <section className="history-section">
+          <h2>Rare answers leaderboard</h2><p>Only days with a confirmed seven-answer breakdown count here. Previously entered scores aren't treated as zero rarities.</p>
+          <div className="all-time-grid">{TIERS.map(t => <section className="board card" key={t.key}>
+            <h3>{t.label} ({t.points} points)</h3>
+            <ol className="rank-list">{[...rarityBoard].sort((a,b)=>b[t.key]-a[t.key]).map((p,i)=><li key={p.id}>
+              <span className="rank">{i+1}</span><span className="player-name">{p.name}</span><strong>{p[t.key]}</strong>
+            </li>)}</ol>
+          </section>)}</div>
+        </section>}
         {(tab === 'today' || tab === 'rankings') && <section className="all-time"><div className="all-time-heading"><div><span className="tiny-label">THE BIGGER PICTURE</span><h2>A little consistency goes a long way.</h2></div><span className="all-time-tag">ALL TIME <span>↗</span></span></div><div className="all-time-grid"><Board players={state.players} metric="wins" currentId={currentId} title="Most daily wins" description="For the ones who keep taking the crown." icon={Crown}/><Board players={state.players} metric="total" currentId={currentId} title="Most total points" description="Every day. Every point. All added up." icon={Medal}/></div></section>}
         {tab === 'history' && <section className="history-section"><div className="day-heading"><div><span className="tiny-label">THE CLUB ARCHIVE</span><h2>Past days, preserved.</h2></div><span className="count-tag">Closed at midnight Eastern</span></div>{!history.length ? <div className="card empty-board"><History size={30}/><h3>{loading ? 'Loading the archive…' : 'The best is yet to come.'}</h3><p>Once the first day closes, its scores and winners will be here.</p></div> : history.map(day => <details className="history-day card" key={day.day}><summary><span className="history-date">{formatDay(day.day, true)}<small>{day.day.slice(0, 4)}</small></span><div className="history-winner"><span className="tiny-label">{day.entries.filter(e => e.score === day.best).length > 1 ? 'SHARED WIN' : 'DAILY WINNER'}</span><strong><Crown size={15}/>{day.entries.filter(e => e.score === day.best).map(e => e.name).join(' & ')}</strong></div><strong className="history-best">{number(day.best)}<small>pts</small></strong><ChevronDown size={18}/></summary><ol>{day.entries.map((p, i, rows) => <li key={p.id}><span className="rank">{rows.findIndex(x => x.score === p.score) + 1}</span><Avatar name={p.name} small/><span className="player-name">{p.name}</span><strong>{number(p.score)}</strong></li>)}</ol></details>)}{moreHistory && <button className="button button-outline history-more" onClick={() => loadHistory(true)} disabled={loading}>Load earlier days</button>}</section>}
       </>}
