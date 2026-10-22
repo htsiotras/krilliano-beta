@@ -1,4 +1,4 @@
-# Krillion Club
+# Krilliano Beta
 
 A responsive friends’ leaderboard with Google sign-in, unique player names, daily score corrections, Eastern-midnight rollovers, tied wins, total points, history, and an admin area.
 
