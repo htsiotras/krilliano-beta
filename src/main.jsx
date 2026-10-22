@@ -152,7 +152,7 @@ function App() {
 
   return <>
     {demo && <div className="preview-banner"><span><strong>INTERACTIVE PREVIEW</strong> Sample players & scores · changes stay in this tab</span><button onClick={signOut}>Exit preview <X size={13}/></button></div>}
-    <header className="header"><a href="/" className="brand" aria-label="Krillion Club home"><span className="brand-symbol"><Waves size={25}/></span><span>krillion<span className="brand-club">club</span></span></a>
+    <header className="header"><a href="/" className="brand" aria-label="Krilliano Beta home"><span className="brand-symbol"><Waves size={25}/></span><span>Krilliano<span className="brand-club">Beta</span></span></a>
       <nav aria-label="Main navigation">{[['today', 'Today'], ['rankings', 'All-time'], ['history', 'History'], ...(state?.isAdmin ? [['admin', 'Admin']] : [])].map(([value, label]) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}</nav>
       <div className="account">{signedIn ? <><span className="account-name">{me?.name || 'Your account'}</span>{me && <Avatar name={me.name} small/>}<button className="icon-button" title={demo ? 'Exit preview' : 'Sign out on this device'} aria-label={demo ? 'Exit preview' : 'Sign out on this device'} onClick={signOut}><LogOut size={18}/></button></> : <button className="button button-small button-outline" onClick={signIn} disabled={busy || !authReady}>Sign in <ArrowRight size={15}/></button>}</div>
     </header>
