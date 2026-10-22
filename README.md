@@ -41,4 +41,14 @@ The site is currently one club. Any Google account that can reach the deployed s
 
 ## Launch
 
-Follow `SETUP.md`. `supabase/setup.sql` is intended for a new empty project and should be run once. No live database has been provisioned by this build.
+Follow `SETUP.md` for a new installation. The live Supabase database has already been initialized; do not rerun `supabase/setup.sql` against it.
+
+## Collaborating on GitHub
+
+Repository: https://github.com/htsiotras/krilliano-beta (private).
+
+The owner can invite contributors through Settings → Collaborators. Clone the repository, create a branch for your change, use `pnpm dev` to preview it, and open a pull request into `main`. Run `pnpm test` for scoring or database changes and `pnpm build` before requesting review.
+
+The existing Vercel project `krillion1/krillion-club` is connected to this repository with `main` as its production branch. Production updates keep the same URL: https://krillion-club.vercel.app. Supabase environment settings are configured on Vercel and are not committed to this repository.
+
+Vercel’s Hobby plan restricts automatic deployments from private repositories to commits authored by the account owner. Friends can contribute through branches and pull requests; the owner should review and publish their changes. See https://vercel.com/docs/deployments/troubleshoot-project-collaboration for the current deployment rules. A repository edit alone does not grant database admin access.
