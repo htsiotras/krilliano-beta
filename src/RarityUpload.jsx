@@ -36,7 +36,7 @@ export default function RarityUpload({ day, expectedScore, onSave, disabled = fa
     e.preventDefault();
     if (!complete || !matching) return;
     setBusy(true); setMessage('');
-    try { await onSave([...rounds]); setMessage(demo ? 'Saved in demo memory only.' : 'Rarity breakdown saved.'); }
+    try { await onSave([...rounds]); setMessage(demo ? 'Demo preview confirmed. No real data was saved.' : 'Rarity breakdown saved.'); }
     catch (error) { setMessage(error.message); }
     finally { setBusy(false); }
   }
