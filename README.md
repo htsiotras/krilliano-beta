@@ -1,6 +1,6 @@
 # Krilliano Beta
 
-A responsive friends’ leaderboard with Google sign-in, unique player names, daily score corrections, Eastern-midnight rollovers, tied wins, total points, history, and an admin area.
+A responsive friends’ leaderboard with Google sign-in, unique player names, daily score corrections, Eastern-midnight rollovers, tied wins, total points, average points per game, history, and an admin area.
 
 ## Current status
 
@@ -14,7 +14,7 @@ To connect the real database, copy `.env.example` to `.env.local` and fill in th
 
 ## Verify
 
-- `pnpm test` runs 15 tests, including actual PostgreSQL functions in a local PGlite database, account authorization, admin restrictions, historical imports, tie recalculation, score corrections, and DST boundaries.
+- `pnpm test` runs 18 tests, including actual PostgreSQL functions in a local PGlite database, account authorization, admin restrictions, historical imports, tie recalculation, score corrections, and DST boundaries.
 - `pnpm build` creates the production files in `dist/`.
 - Browser checks covered submission, corrections, tied rankings, history disclosure, admin score corrections, historical date selection, adding a player with opening totals, and a 390px phone layout.
 - End-to-end Google authentication and production persistence still need verification after the owner connects the accounts.
@@ -52,3 +52,7 @@ The owner can invite contributors through Settings → Collaborators. Clone the 
 The existing Vercel project `krillion1/krillion-club` is connected to this repository with `main` as its production branch. Production updates keep the same URL: https://krillion-club.vercel.app. Supabase environment settings are configured on Vercel and are not committed to this repository.
 
 Vercel’s Hobby plan restricts automatic deployments from private repositories to commits authored by the account owner. Friends can contribute through branches and pull requests; the owner should review and publish their changes. See https://vercel.com/docs/deployments/troubleshoot-project-collaboration for the current deployment rules. A repository edit alone does not grant database admin access.
+
+## Average points per game
+
+The Average points per game leaderboard appears in both Today’s Bigger Picture and the All-time view. It divides each player’s total recorded daily points by their number of submitted games, including historical daily entries and today. Missed days do not count; submitted zero scores do. Corrections replace points without adding a game. Averages display one decimal place and are ranked using their full values. Players appear after their first game. Starting balances without known game counts are excluded rather than assigned a guessed number of games.
