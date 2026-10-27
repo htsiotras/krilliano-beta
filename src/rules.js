@@ -11,10 +11,19 @@ export function nextMidnight(date = new Date()) {
   return new Date(hi).toISOString();
 }
 export function rankPlayers(players, key) {
-  const rows = [...players].filter(p => key !== 'today' || p.today !== null)
+  const rows = [...players].filter(p => (key !== 'today' || p.today !== null) && (key !== 'average' || Number.isFinite(p.average)))
     .sort((a, b) => b[key] - a[key] || a.name.localeCompare(b.name));
   let rank = 0;
   return rows.map((p, i) => { if (i === 0 || rows[i - 1][key] !== p[key]) rank = i + 1; return { ...p, rank }; });
+}
+export function withGameAverages(players) {
+  return players.map(player => {
+    const games = Number(player.days ?? 0);
+    const total = Number(player.total ?? 0);
+    // Opening balances have no game count. Never mix them into a daily-score average.
+    const eligible = games > 0 && Number.isSafeInteger(games) && Number.isFinite(total) && !player.hasOpening;
+    return { ...player, games, average: eligible ? total / games : null };
+  });
 }
 export function scoreValue(value) {
   if (!/^\d+$/.test(String(value).trim())) throw new Error('Enter a whole-number score, such as 350.');
