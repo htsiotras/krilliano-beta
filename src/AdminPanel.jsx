@@ -58,7 +58,7 @@ export default function AdminPanel({ today, demo, state, setState, history, setH
           setHistory(old => [...old.filter(h => h.day !== day), ...(next.length ? [{ day, best, entries: next }] : [])].sort((a,b) => b.day.localeCompare(a.day)));
         }
         setState(old => ({ ...old, players: old.players.map(p => ({ ...p,
-          ...(p.id === playerId ? { total: p.total - (previous ?? 0) + (value ?? 0), ...(day === today ? { today: value } : {}) } : {}),
+          ...(p.id === playerId ? { total: p.total - (previous ?? 0) + (value ?? 0), days: p.days - (previous === null ? 0 : 1) + (value === null ? 0 : 1), ...(day === today ? { today: value } : {}) } : {}),
           wins: p.wins - (formerWinners.includes(p.id) ? 1 : 0) + (nextWinners.includes(p.id) ? 1 : 0)
         })) }));
       } else { await rpc('admin_save_score', { p_player: playerId, p_day: day, p_score: value }); await onChange(); }
